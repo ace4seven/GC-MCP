@@ -9,6 +9,19 @@ const date = z
   .optional()
   .describe('Date in YYYY-MM-DD format, defaults to today');
 
+const dateRange = {
+  start_date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Must be YYYY-MM-DD')
+    .optional()
+    .describe('Start date YYYY-MM-DD, defaults to today. Omit end_date for single-day mode'),
+  end_date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Must be YYYY-MM-DD')
+    .optional()
+    .describe('End date YYYY-MM-DD inclusive. Omit for single-day mode. Max 90 days'),
+};
+
 function ok(data: unknown): CallToolResult {
   return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
 }
@@ -29,10 +42,10 @@ export function registerAllTools(server: McpServer): void {
     'get_daily_summary',
     {
       description: 'Steps, calories, floors, active minutes, distance for a date',
-      inputSchema: { date },
+      inputSchema: { ...dateRange },
     },
-    async ({ date: d }) => {
-      try { return ok(await gc.fetchDailySummary(d)); }
+    async ({ start_date, end_date }) => {
+      try { return ok(await gc.fetchDailySummary(start_date, end_date)); }
       catch (e) { return err(e, 'DAILY_SUMMARY_ERROR'); }
     }
   );
@@ -41,10 +54,10 @@ export function registerAllTools(server: McpServer): void {
     'get_heart_rate',
     {
       description: 'Resting heart rate and intraday HR curve for a date',
-      inputSchema: { date },
+      inputSchema: { ...dateRange },
     },
-    async ({ date: d }) => {
-      try { return ok(await gc.fetchHeartRate(d)); }
+    async ({ start_date, end_date }) => {
+      try { return ok(await gc.fetchHeartRate(start_date, end_date)); }
       catch (e) { return err(e, 'HEART_RATE_ERROR'); }
     }
   );
@@ -53,10 +66,10 @@ export function registerAllTools(server: McpServer): void {
     'get_stress',
     {
       description: 'Average/max stress levels and stress timeline for a date',
-      inputSchema: { date },
+      inputSchema: { ...dateRange },
     },
-    async ({ date: d }) => {
-      try { return ok(await gc.fetchStress(d)); }
+    async ({ start_date, end_date }) => {
+      try { return ok(await gc.fetchStress(start_date, end_date)); }
       catch (e) { return err(e, 'STRESS_ERROR'); }
     }
   );
@@ -65,10 +78,10 @@ export function registerAllTools(server: McpServer): void {
     'get_body_battery',
     {
       description: 'Energy charge/drain curve throughout the day',
-      inputSchema: { date },
+      inputSchema: { ...dateRange },
     },
-    async ({ date: d }) => {
-      try { return ok(await gc.fetchBodyBattery(d)); }
+    async ({ start_date, end_date }) => {
+      try { return ok(await gc.fetchBodyBattery(start_date, end_date)); }
       catch (e) { return err(e, 'BODY_BATTERY_ERROR'); }
     }
   );
@@ -77,10 +90,10 @@ export function registerAllTools(server: McpServer): void {
     'get_sleep_data',
     {
       description: 'Deep/light/REM/awake breakdown, sleep score, and SpO2 during sleep',
-      inputSchema: { date },
+      inputSchema: { ...dateRange },
     },
-    async ({ date: d }) => {
-      try { return ok(await gc.fetchSleepData(d)); }
+    async ({ start_date, end_date }) => {
+      try { return ok(await gc.fetchSleepData(start_date, end_date)); }
       catch (e) { return err(e, 'SLEEP_ERROR'); }
     }
   );
@@ -89,10 +102,10 @@ export function registerAllTools(server: McpServer): void {
     'get_hrv_status',
     {
       description: 'Nightly HRV score and 5-night rolling average',
-      inputSchema: { date },
+      inputSchema: { ...dateRange },
     },
-    async ({ date: d }) => {
-      try { return ok(await gc.fetchHrvStatus(d)); }
+    async ({ start_date, end_date }) => {
+      try { return ok(await gc.fetchHrvStatus(start_date, end_date)); }
       catch (e) { return err(e, 'HRV_ERROR'); }
     }
   );
@@ -101,10 +114,10 @@ export function registerAllTools(server: McpServer): void {
     'get_respiration',
     {
       description: 'Breathing rate throughout the day',
-      inputSchema: { date },
+      inputSchema: { ...dateRange },
     },
-    async ({ date: d }) => {
-      try { return ok(await gc.fetchRespiration(d)); }
+    async ({ start_date, end_date }) => {
+      try { return ok(await gc.fetchRespiration(start_date, end_date)); }
       catch (e) { return err(e, 'RESPIRATION_ERROR'); }
     }
   );
@@ -113,10 +126,10 @@ export function registerAllTools(server: McpServer): void {
     'get_spo2',
     {
       description: 'Blood oxygen (SpO2) readings for a date',
-      inputSchema: { date },
+      inputSchema: { ...dateRange },
     },
-    async ({ date: d }) => {
-      try { return ok(await gc.fetchSpO2(d)); }
+    async ({ start_date, end_date }) => {
+      try { return ok(await gc.fetchSpO2(start_date, end_date)); }
       catch (e) { return err(e, 'SPO2_ERROR'); }
     }
   );
@@ -125,10 +138,10 @@ export function registerAllTools(server: McpServer): void {
     'get_hydration',
     {
       description: 'Water intake log for a date',
-      inputSchema: { date },
+      inputSchema: { ...dateRange },
     },
-    async ({ date: d }) => {
-      try { return ok(await gc.fetchHydration(d)); }
+    async ({ start_date, end_date }) => {
+      try { return ok(await gc.fetchHydration(start_date, end_date)); }
       catch (e) { return err(e, 'HYDRATION_ERROR'); }
     }
   );
@@ -139,10 +152,10 @@ export function registerAllTools(server: McpServer): void {
     'get_training_status',
     {
       description: 'Current fitness level: peaking, productive, maintaining, unproductive, etc.',
-      inputSchema: { date },
+      inputSchema: { ...dateRange },
     },
-    async ({ date: d }) => {
-      try { return ok(await gc.fetchTrainingStatus(d)); }
+    async ({ start_date, end_date }) => {
+      try { return ok(await gc.fetchTrainingStatus(start_date, end_date)); }
       catch (e) { return err(e, 'TRAINING_STATUS_ERROR'); }
     }
   );
@@ -151,10 +164,10 @@ export function registerAllTools(server: McpServer): void {
     'get_training_readiness',
     {
       description: 'Readiness score with contributing factors (sleep, HRV, recovery)',
-      inputSchema: { date },
+      inputSchema: { ...dateRange },
     },
-    async ({ date: d }) => {
-      try { return ok(await gc.fetchTrainingReadiness(d)); }
+    async ({ start_date, end_date }) => {
+      try { return ok(await gc.fetchTrainingReadiness(start_date, end_date)); }
       catch (e) { return err(e, 'TRAINING_READINESS_ERROR'); }
     }
   );
@@ -279,10 +292,10 @@ export function registerAllTools(server: McpServer): void {
     'get_body_composition',
     {
       description: 'BMI, body fat percentage, and muscle mass for a date',
-      inputSchema: { date },
+      inputSchema: { ...dateRange },
     },
-    async ({ date: d }) => {
-      try { return ok(await gc.fetchBodyComposition(d)); }
+    async ({ start_date, end_date }) => {
+      try { return ok(await gc.fetchBodyComposition(start_date, end_date)); }
       catch (e) { return err(e, 'BODY_COMPOSITION_ERROR'); }
     }
   );
