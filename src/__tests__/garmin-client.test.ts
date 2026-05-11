@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { datesBetween, fetchRange } from '../garmin-client';
+import { datesBetween, fetchRange, validateDateRange } from '../garmin-client';
 
 describe('datesBetween', () => {
   it('returns single-element array when start equals end', () => {
@@ -65,5 +65,29 @@ describe('fetchRange', () => {
     const result = await fetchRange(fetcher, '2024-01-01', '2024-01-08');
     expect(fetcher).toHaveBeenCalledTimes(8);
     expect(result).toHaveLength(8);
+  });
+});
+
+describe('validateDateRange', () => {
+  it('throws when end_date is before start_date', () => {
+    expect(() => validateDateRange('2024-01-10', '2024-01-05')).toThrow(
+      'end_date must be on or after start_date'
+    );
+  });
+
+  it('throws when range exceeds 90 days', () => {
+    // 2024-01-01 to 2024-03-31 = 31 + 29 + 31 = 91 days (2024 is a leap year)
+    expect(() => validateDateRange('2024-01-01', '2024-03-31')).toThrow(
+      'Date range exceeds 90 days'
+    );
+  });
+
+  it('does not throw for a single-day range', () => {
+    expect(() => validateDateRange('2024-06-15', '2024-06-15')).not.toThrow();
+  });
+
+  it('does not throw for exactly 90 days', () => {
+    // 2024-01-01 to 2024-03-30 = 31 + 29 + 30 = 90 days
+    expect(() => validateDateRange('2024-01-01', '2024-03-30')).not.toThrow();
   });
 });

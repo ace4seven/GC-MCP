@@ -54,6 +54,16 @@ export async function fetchRange<T>(
   return results;
 }
 
+export function validateDateRange(start: string, end: string): void {
+  if (end < start) {
+    throw new Error('end_date must be on or after start_date');
+  }
+  const days = datesBetween(start, end).length;
+  if (days > 90) {
+    throw new Error(`Date range exceeds 90 days (got ${days})`);
+  }
+}
+
 // ── Daily Health ──────────────────────────────────────────────────────────────
 
 export async function fetchDailySummary(date?: string): Promise<unknown> {
