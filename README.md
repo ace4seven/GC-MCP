@@ -193,11 +193,14 @@ Twelve tools support an optional `end_date` parameter to retrieve multiple days 
 
 ```
 src/
-  index.ts          # CLI entry point (--login flag or MCP server)
-  auth.ts           # Token I/O: login(), loadClient()
+  cli.ts            # Binary entry point — setup/login/server dispatch
+  index.ts          # MCP server: startServer()
+  auth.ts           # Token I/O: login(), loadClient(), isLoggedIn()
   garmin-client.ts  # One fetch* function per tool + range helpers
   tools.ts          # MCP tool registration
   __tests__/
+    cli.test.ts
+    auth.test.ts
     garmin-client.test.ts
 ```
 
@@ -205,7 +208,8 @@ src/
 
 ```bash
 npm run build       # Compile TypeScript → dist/
-npm run login       # Interactive Garmin login, saves tokens to ~/.garmin-mcp/
+npm run setup       # Run the setup wizard (login + configure Claude Desktop)
+npm run login       # Re-authenticate with Garmin
 npm start           # Start MCP server over stdio (requires prior login)
 npm test            # Run unit tests with Vitest
 npx tsc --noEmit    # Type-check without emitting files
