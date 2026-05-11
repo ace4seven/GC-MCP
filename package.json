@@ -7,7 +7,7 @@
     "gc-mcp": "./dist/cli.js"
   },
   "files": [
-    "dist"
+    "dist/*.js"
   ],
   "scripts": {
     "build": "tsc",
