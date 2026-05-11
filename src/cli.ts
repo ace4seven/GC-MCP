@@ -7,6 +7,52 @@ import { startServer } from './index';
 import { login, isLoggedIn } from './auth';
 import { getDisplayName } from './garmin-client';
 
+function readLine(prompt: string): Promise<string> {
+  return new Promise((resolve) => {
+    const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+    rl.question(prompt, (answer) => {
+      rl.close();
+      resolve(answer);
+    });
+  });
+}
+
+export function readPassword(prompt: string): Promise<string> {
+  if (!process.stdin.isTTY) {
+    return readLine(prompt);
+  }
+  return new Promise((resolve) => {
+    process.stdout.write(prompt);
+    let password = '';
+    const onData = (chunk: Buffer) => {
+      const c = chunk.toString();
+      // '\n'/'\r' = Enter, '' = Ctrl+D (EOF)
+      if (c === '\n' || c === '\r' || c === '') {
+        process.stdin.setRawMode(false);
+        process.stdin.pause();
+        process.stdin.removeListener('data', onData);
+        process.stdout.write('\n');
+        resolve(password);
+      } else if (c === '') {
+        // Ctrl+C — exit cleanly
+        process.exit(0);
+      } else if (c === '' || c === '\b') {
+        // Backspace / Delete
+        if (password.length > 0) {
+          password = password.slice(0, -1);
+          process.stdout.write('\b \b');
+        }
+      } else {
+        password += c;
+        process.stdout.write('•');
+      }
+    };
+    process.stdin.setRawMode(true);
+    process.stdin.resume();
+    process.stdin.on('data', onData);
+  });
+}
+
 export function checkNodeVersion(version = process.version): void {
   const major = parseInt(version.replace('v', '').split('.')[0], 10);
   if (major < 18) {
@@ -16,8 +62,11 @@ export function checkNodeVersion(version = process.version): void {
 }
 
 export async function runLogin(): Promise<void> {
-  // implemented in Task 6
-  console.log('login — coming soon');
+  const email = await readLine('  Email: ');
+  const password = await readPassword('  Password: ');
+  process.stdout.write('  Authenticating...');
+  await login(email, password);
+  process.stdout.write('              ✓ Logged in\n');
 }
 
 export async function runSetup(): Promise<void> {
