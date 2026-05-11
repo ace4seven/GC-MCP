@@ -1,4 +1,6 @@
-# Garmin MCP
+# GC-MCP
+
+> **Disclaimer:** GC-MCP is an independent, community-made project. It is not affiliated with, endorsed by, or created by Garmin Ltd. Garmin and Garmin Connect are trademarks of Garmin Ltd.
 
 A [Model Context Protocol](https://modelcontextprotocol.io) server that connects Claude to your [Garmin Connect](https://connect.garmin.com) account. Ask Claude about your health metrics, training load, activities, and trends — directly from conversation.
 
@@ -36,7 +38,7 @@ npx @ace4seven/gc-mcp setup
 
 The wizard will:
 1. Ask for your Garmin Connect email and password
-2. Save authentication tokens to `~/.garmin-mcp/` on your machine
+2. Save authentication tokens to `~/.gc-mcp/` on your machine
 3. Auto-configure Claude Desktop
 
 Then restart Claude Desktop — you're done.
@@ -59,7 +61,7 @@ npx @ace4seven/gc-mcp setup --claude-code
 
 ## Authentication
 
-Tokens are stored in `~/.garmin-mcp/`:
+Tokens are stored in `~/.gc-mcp/`:
 
 | File | Contents |
 |---|---|
@@ -240,7 +242,7 @@ node -e "
 
 **"Missing credentials" error on startup**
 
-Run `npx @ace4seven/gc-mcp login` to authenticate. The server requires token files in `~/.garmin-mcp/` before it can start.
+Run `npx @ace4seven/gc-mcp login` to authenticate. The server requires token files in `~/.gc-mcp/` before it can start.
 
 **Tools not appearing in Claude Desktop**
 
@@ -264,7 +266,7 @@ Some metrics (HRV, SpO2, body composition) require specific hardware. If a day h
 ## Privacy
 
 - Your Garmin credentials are used only during `npx @ace4seven/gc-mcp login` and are never stored.
-- OAuth tokens are stored locally in `~/.garmin-mcp/` on your machine.
+- OAuth tokens are stored locally in `~/.gc-mcp/` on your machine.
 - All Garmin API requests are made directly from your machine — no data passes through any intermediary server.
 
 ---

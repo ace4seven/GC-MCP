@@ -31,7 +31,7 @@ cli.ts → index.ts → tools.ts → garmin-client.ts → auth.ts
 
 **`src/index.ts`** — exports `startServer()`. Checks `isLoggedIn()`, creates `McpServer`, registers all tools, connects `StdioServerTransport`. No CLI logic.
 
-**`src/auth.ts`** — token I/O only. `login()` authenticates and writes two files to `~/.garmin-mcp/` (`oauth1_token.json`, `oauth2_token.json`) via `gc.exportTokenToFile()`. `loadClient()` reconstructs a client from those files using `gc.loadTokenByFile()` — throws `Error` (not `process.exit`) if tokens are missing. Must pass `{ username: '', password: '' }` to the `GarminConnect` constructor even when loading from file.
+**`src/auth.ts`** — token I/O only. `login()` authenticates and writes two files to `~/.gc-mcp/` (`oauth1_token.json`, `oauth2_token.json`) via `gc.exportTokenToFile()`. `loadClient()` reconstructs a client from those files using `gc.loadTokenByFile()` — throws `Error` (not `process.exit`) if tokens are missing. Must pass `{ username: '', password: '' }` to the `GarminConnect` constructor even when loading from file.
 
 **`src/garmin-client.ts`** — one exported `fetch*` function per MCP tool, plus a module-level singleton client and cached `displayName`. All Garmin API calls go through `gc.get(url, { params: {...} })` (axios-style) or a handful of convenience methods (`getHeartRate`, `getSleepData`, `getActivity`). The API base is `https://connectapi.garmin.com`. Five endpoints embed `displayName` in the URL path (daily summary, training load, VO2 max, race predictor, personal records) — these call `await getDisplayName()` which fetches once from `getUserProfile()` and caches the result.
 

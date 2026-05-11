@@ -5,12 +5,12 @@ import { registerAllTools } from './tools';
 
 export async function startServer(): Promise<void> {
   if (!isLoggedIn()) {
-    console.error('No Garmin session found. Run: npx gc-mcp setup');
+    console.error('No session found. Run: npx gc-mcp setup');
     process.exit(1);
   }
 
   const server = new McpServer(
-    { name: 'gc-mcp', version: '1.0.0' },
+    { name: 'gc-mcp', version: '0.0.1' },
     { capabilities: { tools: {} } }
   );
 
