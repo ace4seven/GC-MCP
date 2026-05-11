@@ -66,21 +66,41 @@ export function validateDateRange(start: string, end: string): void {
 
 // ── Daily Health ──────────────────────────────────────────────────────────────
 
-export async function fetchDailySummary(date?: string): Promise<unknown> {
-  const d = date ?? today();
-  const name = await getDisplayName();
-  return getClient().get(
-    `${GC_API}/usersummary-service/usersummary/daily/${name}`,
-    { params: { calendarDate: d } }
-  );
+export async function fetchDailySummary(startDate?: string, endDate?: string): Promise<unknown> {
+  const single = async (d: string) => {
+    const name = await getDisplayName();
+    return getClient().get(
+      `${GC_API}/usersummary-service/usersummary/daily/${name}`,
+      { params: { calendarDate: d } }
+    );
+  };
+  if (endDate) {
+    validateDateRange(startDate ?? today(), endDate);
+    return fetchRange(single, startDate ?? today(), endDate);
+  }
+  return single(startDate ?? today());
 }
 
-export async function fetchHeartRate(date?: string): Promise<unknown> {
-  return getClient().getHeartRate(new Date(date ?? today()));
+export async function fetchHeartRate(startDate?: string, endDate?: string): Promise<unknown> {
+  if (endDate) {
+    validateDateRange(startDate ?? today(), endDate);
+    return fetchRange(
+      d => getClient().getHeartRate(new Date(d)),
+      startDate ?? today(), endDate
+    );
+  }
+  return getClient().getHeartRate(new Date(startDate ?? today()));
 }
 
-export async function fetchStress(date?: string): Promise<unknown> {
-  const d = date ?? today();
+export async function fetchStress(startDate?: string, endDate?: string): Promise<unknown> {
+  if (endDate) {
+    validateDateRange(startDate ?? today(), endDate);
+    return fetchRange(
+      d => getClient().get(`${GC_API}/wellness-service/wellness/dailyStress/${d}`),
+      startDate ?? today(), endDate
+    );
+  }
+  const d = startDate ?? today();
   return getClient().get(`${GC_API}/wellness-service/wellness/dailyStress/${d}`);
 }
 
@@ -92,46 +112,89 @@ export async function fetchBodyBattery(date?: string): Promise<unknown> {
   );
 }
 
-export async function fetchSleepData(date?: string): Promise<unknown> {
-  return getClient().getSleepData(new Date(date ?? today()));
+export async function fetchSleepData(startDate?: string, endDate?: string): Promise<unknown> {
+  if (endDate) {
+    validateDateRange(startDate ?? today(), endDate);
+    return fetchRange(
+      d => getClient().getSleepData(new Date(d)),
+      startDate ?? today(), endDate
+    );
+  }
+  return getClient().getSleepData(new Date(startDate ?? today()));
 }
 
-export async function fetchHrvStatus(date?: string): Promise<unknown> {
-  const d = date ?? today();
+export async function fetchHrvStatus(startDate?: string, endDate?: string): Promise<unknown> {
+  if (endDate) {
+    validateDateRange(startDate ?? today(), endDate);
+    return fetchRange(
+      d => getClient().get(`${GC_API}/hrv-service/hrv/${d}`),
+      startDate ?? today(), endDate
+    );
+  }
+  const d = startDate ?? today();
   return getClient().get(`${GC_API}/hrv-service/hrv/${d}`);
 }
 
-export async function fetchRespiration(date?: string): Promise<unknown> {
-  const d = date ?? today();
+export async function fetchRespiration(startDate?: string, endDate?: string): Promise<unknown> {
+  if (endDate) {
+    validateDateRange(startDate ?? today(), endDate);
+    return fetchRange(
+      d => getClient().get(`${GC_API}/wellness-service/wellness/daily/respiration/${d}`),
+      startDate ?? today(), endDate
+    );
+  }
+  const d = startDate ?? today();
   return getClient().get(`${GC_API}/wellness-service/wellness/daily/respiration/${d}`);
 }
 
-export async function fetchSpO2(date?: string): Promise<unknown> {
-  const d = date ?? today();
+export async function fetchSpO2(startDate?: string, endDate?: string): Promise<unknown> {
+  if (endDate) {
+    validateDateRange(startDate ?? today(), endDate);
+    return fetchRange(
+      d => getClient().get(`${GC_API}/wellness-service/wellness/daily/spo2/${d}`),
+      startDate ?? today(), endDate
+    );
+  }
+  const d = startDate ?? today();
   return getClient().get(`${GC_API}/wellness-service/wellness/daily/spo2/${d}`);
 }
 
-export async function fetchHydration(date?: string): Promise<unknown> {
-  const d = date ?? today();
-  return getClient().get(
-    `${GC_API}/usersummary-service/usersummary/hydration/allData/${d}`
-  );
+export async function fetchHydration(startDate?: string, endDate?: string): Promise<unknown> {
+  if (endDate) {
+    validateDateRange(startDate ?? today(), endDate);
+    return fetchRange(
+      d => getClient().get(`${GC_API}/usersummary-service/usersummary/hydration/allData/${d}`),
+      startDate ?? today(), endDate
+    );
+  }
+  const d = startDate ?? today();
+  return getClient().get(`${GC_API}/usersummary-service/usersummary/hydration/allData/${d}`);
 }
 
 // ── Fitness & Performance ─────────────────────────────────────────────────────
 
-export async function fetchTrainingStatus(date?: string): Promise<unknown> {
-  const d = date ?? today();
-  return getClient().get(
-    `${GC_API}/metrics-service/metrics/trainingstatus/aggregated/${d}`
-  );
+export async function fetchTrainingStatus(startDate?: string, endDate?: string): Promise<unknown> {
+  if (endDate) {
+    validateDateRange(startDate ?? today(), endDate);
+    return fetchRange(
+      d => getClient().get(`${GC_API}/metrics-service/metrics/trainingstatus/aggregated/${d}`),
+      startDate ?? today(), endDate
+    );
+  }
+  const d = startDate ?? today();
+  return getClient().get(`${GC_API}/metrics-service/metrics/trainingstatus/aggregated/${d}`);
 }
 
-export async function fetchTrainingReadiness(date?: string): Promise<unknown> {
-  const d = date ?? today();
-  return getClient().get(
-    `${GC_API}/metrics-service/metrics/trainingreadiness/${d}`
-  );
+export async function fetchTrainingReadiness(startDate?: string, endDate?: string): Promise<unknown> {
+  if (endDate) {
+    validateDateRange(startDate ?? today(), endDate);
+    return fetchRange(
+      d => getClient().get(`${GC_API}/metrics-service/metrics/trainingreadiness/${d}`),
+      startDate ?? today(), endDate
+    );
+  }
+  const d = startDate ?? today();
+  return getClient().get(`${GC_API}/metrics-service/metrics/trainingreadiness/${d}`);
 }
 
 export async function fetchTrainingLoad(date?: string): Promise<unknown> {
