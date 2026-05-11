@@ -213,11 +213,12 @@ export async function fetchTrainingLoad(date?: string): Promise<unknown> {
 
 export async function fetchVo2Max(date?: string): Promise<unknown> {
   const d = date ?? today();
-  const name = await getDisplayName();
-  return getClient().get(
-    `${GC_API}/metrics-service/metrics/maxmet/weekly/${name}`,
-    { params: { fromDate: d, until: d } }
-  );
+  const result = await getClient().get(
+    `${GC_API}/metrics-service/metrics/trainingstatus/aggregated/${d}`
+  ) as Record<string, any>;
+  const vo2 = result.mostRecentVO2Max;
+  if (!vo2) throw new Error(`No VO2 max data available for ${d}`);
+  return vo2;
 }
 
 export async function fetchRacePredictor(): Promise<unknown> {
