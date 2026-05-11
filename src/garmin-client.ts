@@ -104,11 +104,13 @@ export async function fetchStress(startDate?: string, endDate?: string): Promise
   return getClient().get(`${GC_API}/wellness-service/wellness/dailyStress/${d}`);
 }
 
-export async function fetchBodyBattery(date?: string): Promise<unknown> {
-  const d = date ?? today();
+export async function fetchBodyBattery(startDate?: string, endDate?: string): Promise<unknown> {
+  const start = startDate ?? today();
+  const end = endDate ?? start;
+  if (endDate) validateDateRange(start, end);
   return getClient().get(
     `${GC_API}/wellness-service/wellness/bodyBattery/reports/daily`,
-    { params: { startDate: d, endDate: d } }
+    { params: { startDate: start, endDate: end } }
   );
 }
 
@@ -268,11 +270,13 @@ export async function fetchWeightHistory(
   );
 }
 
-export async function fetchBodyComposition(date?: string): Promise<unknown> {
-  const d = date ?? today();
+export async function fetchBodyComposition(startDate?: string, endDate?: string): Promise<unknown> {
+  const start = startDate ?? today();
+  const end = endDate ?? start;
+  if (endDate) validateDateRange(start, end);
   return getClient().get(
     `${GC_API}/weight-service/weight/dateRange`,
-    { params: { startDate: d, endDate: d } }
+    { params: { startDate: start, endDate: end } }
   );
 }
 
