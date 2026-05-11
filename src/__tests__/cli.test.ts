@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { checkNodeVersion, getExistingDisplayName } from '../cli';
+import { checkNodeVersion, getExistingDisplayName, buildClaudeConfig } from '../cli';
 
 describe('cli dispatch', () => {
   beforeEach(() => {
@@ -87,5 +87,35 @@ describe('getExistingDisplayName', () => {
     const { getExistingDisplayName } = await import('../cli');
     const result = await getExistingDisplayName();
     expect(result).toBeNull();
+  });
+});
+
+describe('buildClaudeConfig', () => {
+  const MCP_ENTRY = { command: 'npx', args: ['-y', 'gc-mcp'] };
+
+  it('creates minimal config when existing is null', () => {
+    expect(buildClaudeConfig(null)).toEqual({
+      mcpServers: { garmin: MCP_ENTRY },
+    });
+  });
+
+  it('merges garmin into existing mcpServers without touching other keys', () => {
+    const existing = {
+      mcpServers: { other: { command: 'node', args: ['other.js'] } },
+    };
+    const result = buildClaudeConfig(existing);
+    expect(result.mcpServers.garmin).toEqual(MCP_ENTRY);
+    expect(result.mcpServers.other).toEqual({ command: 'node', args: ['other.js'] });
+  });
+
+  it('overwrites an existing garmin entry', () => {
+    const existing = { mcpServers: { garmin: { command: 'node', args: ['old.js'] } } };
+    const result = buildClaudeConfig(existing);
+    expect(result.mcpServers.garmin).toEqual(MCP_ENTRY);
+  });
+
+  it('handles an object missing the mcpServers key', () => {
+    const result = buildClaudeConfig({ otherKey: true });
+    expect(result.mcpServers.garmin).toEqual(MCP_ENTRY);
   });
 });

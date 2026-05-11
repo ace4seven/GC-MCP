@@ -7,6 +7,23 @@ import { startServer } from './index';
 import { login, isLoggedIn } from './auth';
 import { getDisplayName } from './garmin-client';
 
+const CLAUDE_CONFIG_PATH = path.join(
+  os.homedir(),
+  'Library',
+  'Application Support',
+  'Claude',
+  'claude_desktop_config.json'
+);
+
+const MCP_ENTRY = { command: 'npx', args: ['-y', 'gc-mcp'] };
+
+export function buildClaudeConfig(existing: Record<string, any> | null): Record<string, any> {
+  const config: Record<string, any> = existing ? { ...existing } : {};
+  config.mcpServers = { ...(config.mcpServers ?? {}) };
+  config.mcpServers.garmin = MCP_ENTRY;
+  return config;
+}
+
 function readLine(prompt: string): Promise<string> {
   return new Promise((resolve) => {
     const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
@@ -79,7 +96,36 @@ export async function getExistingDisplayName(): Promise<string | null> {
 }
 
 export async function writeClaudeConfig(): Promise<void> {
-  // implemented in Task 8
+  process.stdout.write('  Configuring Claude Desktop...');
+
+  let existing: Record<string, any> | null = null;
+
+  if (fs.existsSync(CLAUDE_CONFIG_PATH)) {
+    try {
+      existing = JSON.parse(fs.readFileSync(CLAUDE_CONFIG_PATH, 'utf-8'));
+    } catch {
+      process.stdout.write('\n');
+      console.error(`  Could not parse ${CLAUDE_CONFIG_PATH}`);
+      console.error('  Add this to it manually:');
+      console.log(JSON.stringify({ mcpServers: { garmin: MCP_ENTRY } }, null, 2));
+      return;
+    }
+  }
+
+  if (existing?.mcpServers?.garmin != null) {
+    process.stdout.write('\n');
+    const answer = await readLine('  Overwrite existing garmin config? (y/N) ');
+    if (answer.toLowerCase() !== 'y') {
+      process.stdout.write('  Skipping Claude Desktop config.\n');
+      return;
+    }
+    process.stdout.write('  Configuring Claude Desktop...');
+  }
+
+  const updated = buildClaudeConfig(existing);
+  fs.mkdirSync(path.dirname(CLAUDE_CONFIG_PATH), { recursive: true });
+  fs.writeFileSync(CLAUDE_CONFIG_PATH, JSON.stringify(updated, null, 2) + '\n');
+  process.stdout.write(' ✓ Written\n');
 }
 
 export async function detectClaudeCode(
