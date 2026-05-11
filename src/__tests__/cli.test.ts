@@ -1,5 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { checkNodeVersion, getExistingDisplayName, buildClaudeConfig } from '../cli';
+import { checkNodeVersion, getExistingDisplayName, buildClaudeConfig, findClaudeCodeBin } from '../cli';
+
+const { mockExecSync } = vi.hoisted(() => ({ mockExecSync: vi.fn() }));
+vi.mock('child_process', () => ({ execSync: mockExecSync }));
 
 describe('cli dispatch', () => {
   beforeEach(() => {
@@ -117,5 +120,23 @@ describe('buildClaudeConfig', () => {
   it('handles an object missing the mcpServers key', () => {
     const result = buildClaudeConfig({ otherKey: true });
     expect(result.mcpServers.garmin).toEqual(MCP_ENTRY);
+  });
+});
+
+describe('findClaudeCodeBin', () => {
+  afterEach(() => {
+    mockExecSync.mockReset();
+  });
+
+  it('returns trimmed path when claude binary is found', () => {
+    mockExecSync.mockReturnValue('/usr/local/bin/claude\n');
+    expect(findClaudeCodeBin()).toBe('/usr/local/bin/claude');
+  });
+
+  it('returns null when which throws', () => {
+    mockExecSync.mockImplementation(() => {
+      throw new Error('not found');
+    });
+    expect(findClaudeCodeBin()).toBeNull();
   });
 });

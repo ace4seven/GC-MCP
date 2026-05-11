@@ -128,10 +128,35 @@ export async function writeClaudeConfig(): Promise<void> {
   process.stdout.write(' ✓ Written\n');
 }
 
+export function findClaudeCodeBin(): string | null {
+  try {
+    return childProcess.execSync('which claude', { encoding: 'utf-8' }).trim();
+  } catch {
+    return null;
+  }
+}
+
 export async function detectClaudeCode(
   flag = process.argv.includes('--claude-code')
 ): Promise<void> {
-  // implemented in Task 9
+  if (flag) {
+    process.stdout.write('  Configuring Claude Code CLI...');
+    childProcess.execSync('claude mcp add gc-mcp -- npx -y gc-mcp', { stdio: 'inherit' });
+    process.stdout.write('  ✓ Registered\n');
+  } else {
+    const bin = findClaudeCodeBin();
+    if (bin) {
+      const answer = await readLine(
+        '  Claude Code CLI detected — also configure for Claude Code? (Y/n) '
+      );
+      if (answer.toLowerCase() !== 'n') {
+        childProcess.execSync('claude mcp add gc-mcp -- npx -y gc-mcp', { stdio: 'inherit' });
+        process.stdout.write('  ✓ Claude Code CLI configured\n');
+      }
+    }
+  }
+
+  console.log('\n  Done! Restart Claude Desktop and ask: "How was my sleep last night?"\n');
 }
 
 export async function runSetup(): Promise<void> {
