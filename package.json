@@ -4,7 +4,7 @@
   "description": "Garmin Connect MCP server for AI assistants",
   "main": "dist/index.js",
   "bin": {
-    "gc-mcp": "./dist/cli.js"
+    "gc-mcp": "dist/cli.js"
   },
   "files": [
     "dist/*.js"
