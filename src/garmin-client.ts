@@ -23,6 +23,17 @@ function today(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
+export function datesBetween(start: string, end: string): string[] {
+  const dates: string[] = [];
+  const cur = new Date(start + 'T12:00:00Z');
+  const last = new Date(end + 'T12:00:00Z');
+  while (cur <= last) {
+    dates.push(cur.toISOString().slice(0, 10));
+    cur.setUTCDate(cur.getUTCDate() + 1);
+  }
+  return dates;
+}
+
 // ── Daily Health ──────────────────────────────────────────────────────────────
 
 export async function fetchDailySummary(date?: string): Promise<unknown> {
