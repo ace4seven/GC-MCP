@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { datesBetween } from '../garmin-client';
+import { datesBetween, fetchRange } from '../garmin-client';
 
 describe('datesBetween', () => {
   it('returns single-element array when start equals end', () => {
@@ -24,5 +24,46 @@ describe('datesBetween', () => {
 
   it('returns empty array when end is before start', () => {
     expect(datesBetween('2024-01-05', '2024-01-01')).toEqual([]);
+  });
+});
+
+describe('fetchRange', () => {
+  it('calls fetcher for each date and collects results', async () => {
+    const fetcher = vi.fn().mockResolvedValue({ score: 42 });
+    const result = await fetchRange(fetcher, '2024-01-01', '2024-01-03');
+    expect(fetcher).toHaveBeenCalledTimes(3);
+    expect(fetcher).toHaveBeenCalledWith('2024-01-01');
+    expect(fetcher).toHaveBeenCalledWith('2024-01-02');
+    expect(fetcher).toHaveBeenCalledWith('2024-01-03');
+    expect(result).toEqual([
+      { date: '2024-01-01', data: { score: 42 } },
+      { date: '2024-01-02', data: { score: 42 } },
+      { date: '2024-01-03', data: { score: 42 } },
+    ]);
+  });
+
+  it('silently drops dates where fetcher rejects', async () => {
+    const fetcher = vi.fn()
+      .mockResolvedValueOnce({ score: 1 })
+      .mockRejectedValueOnce(new Error('API error'))
+      .mockResolvedValueOnce({ score: 3 });
+    const result = await fetchRange(fetcher, '2024-01-01', '2024-01-03');
+    expect(result).toEqual([
+      { date: '2024-01-01', data: { score: 1 } },
+      { date: '2024-01-03', data: { score: 3 } },
+    ]);
+  });
+
+  it('returns empty array when all fetches fail', async () => {
+    const fetcher = vi.fn().mockRejectedValue(new Error('API error'));
+    const result = await fetchRange(fetcher, '2024-01-01', '2024-01-03');
+    expect(result).toEqual([]);
+  });
+
+  it('processes all 8 dates when range exceeds one batch of 7', async () => {
+    const fetcher = vi.fn().mockResolvedValue({ ok: true });
+    const result = await fetchRange(fetcher, '2024-01-01', '2024-01-08');
+    expect(fetcher).toHaveBeenCalledTimes(8);
+    expect(result).toHaveLength(8);
   });
 });

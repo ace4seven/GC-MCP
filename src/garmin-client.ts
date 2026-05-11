@@ -34,6 +34,26 @@ export function datesBetween(start: string, end: string): string[] {
   return dates;
 }
 
+export async function fetchRange<T>(
+  fetcher: (date: string) => Promise<T>,
+  start: string,
+  end: string
+): Promise<Array<{ date: string; data: T }>> {
+  const dates = datesBetween(start, end);
+  const results: Array<{ date: string; data: T }> = [];
+
+  for (let i = 0; i < dates.length; i += 7) {
+    const batch = dates.slice(i, i + 7);
+    const settled = await Promise.allSettled(
+      batch.map(d => fetcher(d).then(data => ({ date: d, data })))
+    );
+    for (const r of settled) {
+      if (r.status === 'fulfilled') results.push(r.value);
+    }
+  }
+  return results;
+}
+
 // ── Daily Health ──────────────────────────────────────────────────────────────
 
 export async function fetchDailySummary(date?: string): Promise<unknown> {
