@@ -7,6 +7,14 @@ import { startServer } from './index';
 import { login, isLoggedIn } from './auth';
 import { getDisplayName } from './garmin-client';
 
+export function checkNodeVersion(version = process.version): void {
+  const major = parseInt(version.replace('v', '').split('.')[0], 10);
+  if (major < 18) {
+    console.error('Node 18+ required. Install with: brew install node');
+    process.exit(1);
+  }
+}
+
 export async function runLogin(): Promise<void> {
   // implemented in Task 6
   console.log('login — coming soon');
