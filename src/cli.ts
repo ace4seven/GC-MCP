@@ -26,17 +26,17 @@ export function readPassword(prompt: string): Promise<string> {
     let password = '';
     const onData = (chunk: Buffer) => {
       const c = chunk.toString();
-      // '\n'/'\r' = Enter, '' = Ctrl+D (EOF)
-      if (c === '\n' || c === '\r' || c === '') {
+      // '\n'/'\r' = Enter, '\x04' = Ctrl+D (EOF)
+      if (c === '\n' || c === '\r' || c === '\x04') {
         process.stdin.setRawMode(false);
         process.stdin.pause();
         process.stdin.removeListener('data', onData);
         process.stdout.write('\n');
         resolve(password);
-      } else if (c === '') {
+      } else if (c === '\x03') {
         // Ctrl+C — exit cleanly
         process.exit(0);
-      } else if (c === '' || c === '\b') {
+      } else if (c === '\x7f' || c === '\b') {
         // Backspace / Delete
         if (password.length > 0) {
           password = password.slice(0, -1);
