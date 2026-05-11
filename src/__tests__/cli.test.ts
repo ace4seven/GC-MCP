@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { checkNodeVersion } from '../cli';
+import { checkNodeVersion, getExistingDisplayName } from '../cli';
 
 describe('cli dispatch', () => {
   beforeEach(() => {
@@ -50,5 +50,42 @@ describe('checkNodeVersion', () => {
     checkNodeVersion('v22.3.0');
     expect(exitSpy).not.toHaveBeenCalled();
     exitSpy.mockRestore();
+  });
+});
+
+describe('getExistingDisplayName', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('returns null when not logged in', async () => {
+    vi.doMock('../index', () => ({ startServer: vi.fn().mockResolvedValue(undefined) }));
+    vi.doMock('../auth', () => ({
+      login: vi.fn(),
+      isLoggedIn: vi.fn().mockReturnValue(false),
+      loadClient: vi.fn(),
+      TOKEN_DIR: '/tmp/.garmin-mcp',
+    }));
+    vi.resetModules();
+    const { getExistingDisplayName } = await import('../cli');
+    const result = await getExistingDisplayName();
+    expect(result).toBeNull();
+  });
+
+  it('returns null when getDisplayName throws', async () => {
+    vi.doMock('../index', () => ({ startServer: vi.fn().mockResolvedValue(undefined) }));
+    vi.doMock('../auth', () => ({
+      login: vi.fn(),
+      isLoggedIn: vi.fn().mockReturnValue(true),
+      loadClient: vi.fn(),
+      TOKEN_DIR: '/tmp/.garmin-mcp',
+    }));
+    vi.doMock('../garmin-client', () => ({
+      getDisplayName: vi.fn().mockRejectedValue(new Error('network error')),
+    }));
+    vi.resetModules();
+    const { getExistingDisplayName } = await import('../cli');
+    const result = await getExistingDisplayName();
+    expect(result).toBeNull();
   });
 });
