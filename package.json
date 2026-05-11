@@ -1,5 +1,5 @@
 {
-  "name": "gc-mcp",
+  "name": "@ace4seven/gc-mcp",
   "version": "1.0.0",
   "description": "Garmin Connect MCP server for AI assistants",
   "main": "dist/index.js",

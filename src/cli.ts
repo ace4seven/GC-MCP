@@ -15,7 +15,7 @@ const CLAUDE_CONFIG_PATH = path.join(
   'claude_desktop_config.json'
 );
 
-const MCP_ENTRY = { command: 'npx', args: ['-y', 'gc-mcp'] };
+const MCP_ENTRY = { command: 'npx', args: ['-y', '@ace4seven/gc-mcp'] };
 
 export function buildClaudeConfig(existing: Record<string, any> | null): Record<string, any> {
   const config: Record<string, any> = existing ? { ...existing } : {};
@@ -141,7 +141,7 @@ export async function detectClaudeCode(
 ): Promise<void> {
   if (flag) {
     process.stdout.write('  Configuring Claude Code CLI...');
-    childProcess.execSync('claude mcp add gc-mcp -- npx -y gc-mcp', { stdio: 'inherit' });
+    childProcess.execSync('claude mcp add gc-mcp -- npx -y @ace4seven/gc-mcp', { stdio: 'inherit' });
     process.stdout.write('  ✓ Registered\n');
   } else {
     const bin = findClaudeCodeBin();
@@ -150,7 +150,7 @@ export async function detectClaudeCode(
         '  Claude Code CLI detected — also configure for Claude Code? (Y/n) '
       );
       if (answer.toLowerCase() !== 'n') {
-        childProcess.execSync('claude mcp add gc-mcp -- npx -y gc-mcp', { stdio: 'inherit' });
+        childProcess.execSync('claude mcp add gc-mcp -- npx -y @ace4seven/gc-mcp', { stdio: 'inherit' });
         process.stdout.write('  ✓ Claude Code CLI configured\n');
       }
     }

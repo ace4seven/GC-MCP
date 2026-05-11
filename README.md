@@ -31,7 +31,7 @@ Claude fetches the data from Garmin Connect in real time and can reason across m
 Run this in your terminal:
 
 ```bash
-npx gc-mcp setup
+npx @ace4seven/gc-mcp setup
 ```
 
 The wizard will:
@@ -46,13 +46,13 @@ Then restart Claude Desktop — you're done.
 Garmin sessions expire periodically. Run this to re-authenticate:
 
 ```bash
-npx gc-mcp login
+npx @ace4seven/gc-mcp login
 ```
 
 ### Claude Code CLI
 
 ```bash
-npx gc-mcp setup --claude-code
+npx @ace4seven/gc-mcp setup --claude-code
 ```
 
 ---
@@ -66,7 +66,7 @@ Tokens are stored in `~/.garmin-mcp/`:
 | `oauth1_token.json` | OAuth 1 token |
 | `oauth2_token.json` | OAuth 2 token |
 
-These files are created by `npx gc-mcp login` and read at server startup. If your session expires or you see authentication errors, run `npx gc-mcp login` again and restart Claude Desktop.
+These files are created by `npx @ace4seven/gc-mcp login` and read at server startup. If your session expires or you see authentication errors, run `npx @ace4seven/gc-mcp login` again and restart Claude Desktop.
 
 ---
 
@@ -240,11 +240,11 @@ node -e "
 
 **"Missing credentials" error on startup**
 
-Run `npx gc-mcp login` to authenticate. The server requires token files in `~/.garmin-mcp/` before it can start.
+Run `npx @ace4seven/gc-mcp login` to authenticate. The server requires token files in `~/.garmin-mcp/` before it can start.
 
 **Tools not appearing in Claude Desktop**
 
-- Re-run `npx gc-mcp setup` to ensure `claude_desktop_config.json` is configured correctly
+- Re-run `npx @ace4seven/gc-mcp setup` to ensure `claude_desktop_config.json` is configured correctly
 - Restart Claude Desktop fully (quit and reopen, not just the window)
 
 **"Tool result is too large" error**
@@ -253,7 +253,7 @@ This occurs when a date range returns more data than Claude can process in one r
 
 **Authentication expired**
 
-Garmin OAuth tokens expire periodically. Run `npx gc-mcp login` again and restart Claude Desktop.
+Garmin OAuth tokens expire periodically. Run `npx @ace4seven/gc-mcp login` again and restart Claude Desktop.
 
 **Data not available for a date**
 
@@ -263,7 +263,7 @@ Some metrics (HRV, SpO2, body composition) require specific hardware. If a day h
 
 ## Privacy
 
-- Your Garmin credentials are used only during `npx gc-mcp login` and are never stored.
+- Your Garmin credentials are used only during `npx @ace4seven/gc-mcp login` and are never stored.
 - OAuth tokens are stored locally in `~/.garmin-mcp/` on your machine.
 - All Garmin API requests are made directly from your machine — no data passes through any intermediary server.
 
