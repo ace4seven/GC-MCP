@@ -17,8 +17,7 @@ export function loadClient(): GarminConnect {
   try {
     gc.loadTokenByFile(TOKEN_DIR);
   } catch {
-    console.error(`Session not found. Run: node dist/index.js --login`);
-    process.exit(1);
+    throw new Error('Session not found. Run: npx gc-mcp login');
   }
   return gc;
 }
