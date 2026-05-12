@@ -1,8 +1,18 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { checkNodeVersion, getExistingDisplayName, buildClaudeConfig, findClaudeCodeBin } from '../cli';
+import {
+  checkNodeVersion,
+  getExistingDisplayName,
+  buildClaudeConfig,
+  buildMcpServerConfig,
+  findClaudeCodeBin,
+  CLIENTS,
+} from '../cli';
 
 const { mockExecSync } = vi.hoisted(() => ({ mockExecSync: vi.fn() }));
 vi.mock('child_process', () => ({ execSync: mockExecSync }));
+
+const MCP_ENTRY = { command: 'npx', args: ['-y', '@ace4seven/gc-mcp'] };
+const ZED_ENTRY = { source: 'custom', ...MCP_ENTRY };
 
 describe('cli dispatch', () => {
   beforeEach(() => {
@@ -93,9 +103,40 @@ describe('getExistingDisplayName', () => {
   });
 });
 
-describe('buildClaudeConfig', () => {
-  const MCP_ENTRY = { command: 'npx', args: ['-y', 'gc-mcp'] };
+describe('buildMcpServerConfig', () => {
+  it('creates config with given serverKey when existing is null', () => {
+    expect(buildMcpServerConfig(null, 'mcpServers', MCP_ENTRY)).toEqual({
+      mcpServers: { garmin: MCP_ENTRY },
+    });
+  });
 
+  it('uses servers key (VS Code style)', () => {
+    expect(buildMcpServerConfig(null, 'servers', MCP_ENTRY)).toEqual({
+      servers: { garmin: MCP_ENTRY },
+    });
+  });
+
+  it('uses context_servers key with Zed entry', () => {
+    expect(buildMcpServerConfig(null, 'context_servers', ZED_ENTRY)).toEqual({
+      context_servers: { garmin: ZED_ENTRY },
+    });
+  });
+
+  it('preserves existing top-level keys', () => {
+    const existing = { theme: 'dark', mcpServers: { other: { command: 'foo' } } };
+    const result = buildMcpServerConfig(existing, 'mcpServers', MCP_ENTRY);
+    expect(result.theme).toBe('dark');
+    expect(result.mcpServers.garmin).toEqual(MCP_ENTRY);
+    expect(result.mcpServers.other).toEqual({ command: 'foo' });
+  });
+
+  it('overwrites an existing garmin entry', () => {
+    const existing = { mcpServers: { garmin: { command: 'old' } } };
+    expect(buildMcpServerConfig(existing, 'mcpServers', MCP_ENTRY).mcpServers.garmin).toEqual(MCP_ENTRY);
+  });
+});
+
+describe('buildClaudeConfig', () => {
   it('creates minimal config when existing is null', () => {
     expect(buildClaudeConfig(null)).toEqual({
       mcpServers: { garmin: MCP_ENTRY },
@@ -113,13 +154,55 @@ describe('buildClaudeConfig', () => {
 
   it('overwrites an existing garmin entry', () => {
     const existing = { mcpServers: { garmin: { command: 'node', args: ['old.js'] } } };
-    const result = buildClaudeConfig(existing);
-    expect(result.mcpServers.garmin).toEqual(MCP_ENTRY);
+    expect(buildClaudeConfig(existing).mcpServers.garmin).toEqual(MCP_ENTRY);
   });
 
   it('handles an object missing the mcpServers key', () => {
-    const result = buildClaudeConfig({ otherKey: true });
-    expect(result.mcpServers.garmin).toEqual(MCP_ENTRY);
+    expect(buildClaudeConfig({ otherKey: true }).mcpServers.garmin).toEqual(MCP_ENTRY);
+  });
+});
+
+describe('CLIENTS table', () => {
+  it('has entries for all expected clients', () => {
+    const ids = CLIENTS.map(c => c.id);
+    expect(ids).toContain('claude-desktop');
+    expect(ids).toContain('cursor');
+    expect(ids).toContain('windsurf');
+    expect(ids).toContain('vscode');
+    expect(ids).toContain('zed');
+  });
+
+  it('claude-desktop uses mcpServers key', () => {
+    const client = CLIENTS.find(c => c.id === 'claude-desktop')!;
+    expect(client.serverKey).toBe('mcpServers');
+    expect(client.entry).toEqual(MCP_ENTRY);
+  });
+
+  it('vscode uses servers key', () => {
+    const client = CLIENTS.find(c => c.id === 'vscode')!;
+    expect(client.serverKey).toBe('servers');
+    expect(client.entry).toEqual(MCP_ENTRY);
+  });
+
+  it('zed uses context_servers key with source:custom', () => {
+    const client = CLIENTS.find(c => c.id === 'zed')!;
+    expect(client.serverKey).toBe('context_servers');
+    expect(client.entry).toEqual(ZED_ENTRY);
+  });
+
+  it('cursor and windsurf use mcpServers key', () => {
+    const cursor = CLIENTS.find(c => c.id === 'cursor')!;
+    const windsurf = CLIENTS.find(c => c.id === 'windsurf')!;
+    expect(cursor.serverKey).toBe('mcpServers');
+    expect(windsurf.serverKey).toBe('mcpServers');
+  });
+
+  it('all clients have configPath, entry, and isInstalled', () => {
+    for (const client of CLIENTS) {
+      expect(client.configPath).toBeTruthy();
+      expect(client.entry).toBeTruthy();
+      expect(typeof client.isInstalled).toBe('function');
+    }
   });
 });
 

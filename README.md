@@ -2,13 +2,15 @@
 
 > **Disclaimer:** GC-MCP is an independent, community-made project. It is not affiliated with, endorsed by, or created by Garmin Ltd. Garmin and Garmin Connect are trademarks of Garmin Ltd.
 
-A [Model Context Protocol](https://modelcontextprotocol.io) server that connects Claude to your [Garmin Connect](https://connect.garmin.com) account. Ask Claude about your health metrics, training load, activities, and trends — directly from conversation.
+A [Model Context Protocol](https://modelcontextprotocol.io) server that connects AI assistants to your [Garmin Connect](https://connect.garmin.com) account. Ask about your health metrics, training load, activities, and trends — directly from conversation.
+
+Works with **Claude Desktop, Cursor, Windsurf, VS Code, Zed**, and Claude Code CLI. The setup wizard auto-detects whichever clients you have installed and configures them all at once.
 
 ---
 
 ## What It Does
 
-Once configured, you can ask Claude things like:
+Once configured, you can ask your AI assistant things like:
 
 - *"How was my sleep last week?"*
 - *"Show me my HRV trend for the past 30 days"*
@@ -16,7 +18,7 @@ Once configured, you can ask Claude things like:
 - *"List my last 10 runs with pace and distance"*
 - *"How does my training readiness compare to my stress levels this month?"*
 
-Claude fetches the data from Garmin Connect in real time and can reason across multiple metrics in a single response.
+The AI fetches data from Garmin Connect in real time and can reason across multiple metrics in a single response.
 
 ---
 
@@ -24,7 +26,22 @@ Claude fetches the data from Garmin Connect in real time and can reason across m
 
 - **Node.js** 18 or later
 - **A Garmin Connect account** with data synced from a compatible device
-- **Claude Desktop** (or any MCP-compatible client)
+- **At least one supported AI client** (see below)
+
+---
+
+## Supported Clients
+
+| Client | Config written by setup |
+|---|---|
+| Claude Desktop | `~/Library/Application Support/Claude/claude_desktop_config.json` |
+| Cursor | `~/.cursor/mcp.json` |
+| Windsurf | `~/.codeium/windsurf/mcp_config.json` |
+| VS Code | `~/Library/Application Support/Code/User/mcp.json` |
+| Zed | `~/.config/zed/settings.json` |
+| Claude Code CLI | `claude mcp add` |
+
+The wizard detects which clients are installed and configures them automatically. Windows and Linux paths are resolved correctly on each platform.
 
 ---
 
@@ -39,9 +56,9 @@ npx @ace4seven/gc-mcp setup
 The wizard will:
 1. Ask for your Garmin Connect email and password
 2. Save authentication tokens to `~/.gc-mcp/` on your machine
-3. Auto-configure Claude Desktop
+3. Detect all installed AI clients and configure each one
 
-Then restart Claude Desktop — you're done.
+Then restart any configured AI client — you're done.
 
 ### When tokens expire
 
@@ -51,7 +68,7 @@ Garmin sessions expire periodically. Run this to re-authenticate:
 npx @ace4seven/gc-mcp login
 ```
 
-### Claude Code CLI
+### Claude Code CLI only
 
 ```bash
 npx @ace4seven/gc-mcp setup --claude-code
@@ -173,19 +190,19 @@ Twelve tools support an optional `end_date` parameter to retrieve multiple days 
 
 **Weekly trend:**
 > *"Show me my sleep scores for the past 7 days"*  
-> *(Claude calls `get_sleep_data` with `start_date: 2024-03-08, end_date: 2024-03-14`)*
+> *(calls `get_sleep_data` with `start_date: 2024-03-08, end_date: 2024-03-14`)*
 
 **Training analysis:**
 > *"How has my HRV trended over the last 30 days, and does it correlate with my training load?"*  
-> *(Claude calls `get_hrv_status` with a 30-day range and `get_training_load` for context)*
+> *(calls `get_hrv_status` with a 30-day range and `get_training_load` for context)*
 
 **Activity lookup:**
 > *"List my last 5 runs with pace"*  
-> *(Claude calls `list_activities` with `sport_type: "running", limit: 5`)*
+> *(calls `list_activities` with `sport_type: "running", limit: 5`)*
 
 **Gear tracking:**
 > *"How many kilometres are on my running shoes?"*  
-> *(Claude calls `list_gear`)*
+> *(calls `list_gear`)*
 
 ---
 
@@ -210,7 +227,7 @@ src/
 
 ```bash
 npm run build       # Compile TypeScript → dist/
-npm run setup       # Run the setup wizard (login + configure Claude Desktop)
+npm run setup       # Run the setup wizard (login + configure all detected AI clients)
 npm run login       # Re-authenticate with Garmin
 npm start           # Start MCP server over stdio (requires prior login)
 npm test            # Run unit tests with Vitest
@@ -244,10 +261,10 @@ node -e "
 
 Run `npx @ace4seven/gc-mcp login` to authenticate. The server requires token files in `~/.gc-mcp/` before it can start.
 
-**Tools not appearing in Claude Desktop**
+**Tools not appearing in your AI client**
 
-- Re-run `npx @ace4seven/gc-mcp setup` to ensure `claude_desktop_config.json` is configured correctly
-- Restart Claude Desktop fully (quit and reopen, not just the window)
+- Re-run `npx @ace4seven/gc-mcp setup` to re-write the config for all detected clients
+- Restart the AI client fully (quit and reopen, not just the window)
 
 **"Tool result is too large" error**
 
@@ -255,7 +272,7 @@ This occurs when a date range returns more data than Claude can process in one r
 
 **Authentication expired**
 
-Garmin OAuth tokens expire periodically. Run `npx @ace4seven/gc-mcp login` again and restart Claude Desktop.
+Garmin OAuth tokens expire periodically. Run `npx @ace4seven/gc-mcp login` again and restart your AI client.
 
 **Data not available for a date**
 

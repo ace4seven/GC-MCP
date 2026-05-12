@@ -27,7 +27,9 @@ Four source files with a strict dependency order:
 cli.ts → index.ts → tools.ts → garmin-client.ts → auth.ts
 ```
 
-**`src/cli.ts`** — binary entry point (`gc-mcp` bin). Dispatches: no args → `startServer()`, `setup` → wizard, `login` → re-auth. Contains the full setup wizard: Node version check, existing token check, hidden-password login prompt, Claude Desktop config write (`buildClaudeConfig`/`writeClaudeConfig`), Claude Code CLI detection.
+**`src/cli.ts`** — binary entry point (`gc-mcp` bin). Dispatches: no args → `startServer()`, `setup` → wizard, `login` → re-auth. Contains the full setup wizard: Node version check, existing token check, hidden-password login prompt, multi-client config detection and write (`CLIENTS` table, `buildMcpServerConfig`/`writeJsonConfig`), Claude Code CLI detection.
+
+Supported MCP clients (auto-detected at setup time): Claude Desktop, Cursor, Windsurf, VS Code (uses `servers` key), Zed (uses `context_servers` key with `source:"custom"`). Each client is detected by checking its config directory or application bundle, then configured by merging into its JSON config file. `buildClaudeConfig` and `writeClaudeConfig` remain exported as backward-compat aliases over the generic `buildMcpServerConfig`/`writeJsonConfig`.
 
 **`src/index.ts`** — exports `startServer()`. Checks `isLoggedIn()`, creates `McpServer`, registers all tools, connects `StdioServerTransport`. No CLI logic.
 
@@ -37,19 +39,23 @@ cli.ts → index.ts → tools.ts → garmin-client.ts → auth.ts
 
 **`src/tools.ts`** — `registerAllTools(server)` wires each `fetch*` function to an MCP tool name. All handlers follow the same pattern: `try { return ok(data) } catch (e) { return err(e, 'CODE') }`. The `ok()`/`err()` helpers return `CallToolResult` from the SDK. Two `@ts-expect-error TS2589` markers exist on specific `registerTool` calls — this is a known TypeScript instantiation-depth issue between Zod ~3.24 and MCP SDK 1.29, not a logic error. Do not remove them without verifying the depth issue is resolved upstream.
 
-## Claude Desktop config
+## Client configs
 
-Server entry in `~/Library/Application Support/Claude/claude_desktop_config.json`:
-```json
-"garmin": {
-  "command": "node",
-  "args": ["/Users/jmacak/Developer/7-MCP-servers/garmin-mcp/dist/cli.js"]
-}
-```
+`npx gc-mcp setup` auto-detects and writes configs for all installed MCP-compatible clients:
 
-**Important:** After the refactor, `dist/index.js` only exports `startServer()` — it no longer auto-starts when run directly. Claude Desktop must point to `dist/cli.js`.
+| Client | Config path | Key |
+|---|---|---|
+| Claude Desktop | `~/Library/Application Support/Claude/claude_desktop_config.json` | `mcpServers` |
+| Cursor | `~/.cursor/mcp.json` | `mcpServers` |
+| Windsurf | `~/.codeium/windsurf/mcp_config.json` | `mcpServers` |
+| VS Code | `~/Library/Application Support/Code/User/mcp.json` | `servers` |
+| Zed | `~/.config/zed/settings.json` | `context_servers` |
 
-After modifying source, rebuild and restart Claude Desktop for changes to take effect.
+Windows/Linux paths are resolved correctly for each platform.
+
+**Important:** `dist/index.js` only exports `startServer()` — it no longer auto-starts when run directly. All clients must point to `dist/cli.js` (or use `npx @ace4seven/gc-mcp`).
+
+After modifying source, rebuild and restart the relevant AI client for changes to take effect.
 
 ## Adding a new tool
 
