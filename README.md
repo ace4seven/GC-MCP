@@ -22,16 +22,58 @@ The AI fetches data from Garmin Connect in real time and can reason across multi
 
 ---
 
-## Looking for a coach, not a data tool?
+## gc-coach Plugin
 
-This repo also ships **`gc-coach`** — a Claude Code plugin built on top of this MCP server that turns Claude into a personalised fitness coach with persistent memory, daily readiness decisions, weekly planning, and automatic red-flag detection.
+This repo ships **`gc-coach`** — a Claude Code plugin built on top of this MCP server that turns Claude into a personalised fitness coach with persistent memory, daily readiness decisions, weekly planning, and automatic red-flag detection.
+
+### Install
 
 ```
 /plugin marketplace add ace4seven/GC-MCP
 /plugin install gc-coach@gc-mcp-marketplace
 ```
 
-See [`plugin/README.md`](plugin/README.md) for full details.
+### Slash Commands
+
+| Command | Description |
+|---|---|
+| `/coach-onboard` | First-run setup. Infers an athlete profile from 90 days of Garmin data, confirms with 5 questions, and writes a conservative starter training block. |
+| `/coach-today` | Morning decision. Reads today's readiness, HRV, sleep, and body battery; cross-checks the weekly plan and active flags; outputs one prescription + fallback. |
+| `/coach-checkin` | Daily log. Asks energy (1–10), soreness, sleep, session done, and RPE in a single prompt. Detects patterns (soreness recurrence, sleep debt) and opens flags automatically. |
+| `/coach-plan-week` | Builds a periodised Monday–Sunday week with session rationale. Flags if a deload is due. Saves to `weekly-plan.md`. |
+| `/coach-review` | Weekly retrospective. Reports adherence, load trajectory, opened/closed flags, and exactly one thing to change next week. |
+
+### Skills
+
+Skills are loaded automatically when a relevant command runs. They carry the coaching intelligence — the commands are thin orchestrators on top.
+
+| Skill | Triggers on |
+|---|---|
+| `coach-core` | Every `/coach-*` command and any coaching question — enforces profile-first, flag-aware, voice-matched responses. |
+| `onboarding` | `/coach-onboard`, or any interaction where `profile.json` is missing. Runs the 3-phase bootstrap (silent inference → 5 questions → starter block). |
+| `daily-advisor` | `/coach-today` and any "what should I do today?" question. Applies the readiness tier → training decision tree. |
+| `recovery-advisor` | Loaded by `daily-advisor` when tier is `easy` or `rest`. Prescribes concrete recovery actions by limiting factor (HRV, sleep, soreness, load). |
+| `pattern-detective` | `/coach-checkin`, `/coach-review`, and any response touching ≥7 days of data. Runs HRV drift, soreness recurrence, sleep debt, and modality imbalance checks. |
+| `weekly-planner` | `/coach-plan-week` and any "plan my week" request. Composes a periodised week respecting 80/20 distribution, deload cadence, and flex days. |
+| `endurance-block` | Loaded by `weekly-planner` for running/cycling athletes. Provides zone definitions, weekly skeleton, race taper rules, and indoor↔outdoor substitutions. |
+| `strength-block` | Loaded by `weekly-planner` for strength athletes. Provides split selection, RPE-based progression, phase rotation, and endurance conflict resolution. |
+
+### State files
+
+All coaching state is stored locally in `~/.gc-mcp/coach/` as plain Markdown and JSON — no cloud sync.
+
+```
+~/.gc-mcp/coach/
+├── profile.json          # Athlete profile (modalities, baselines, voice prefs)
+├── goals.md              # Goals in the athlete's own words
+├── current-block.md      # Active training block description
+├── weekly-plan.md        # Current week's session plan
+├── flags.md              # Active and closed red flags
+├── daily-log/
+│   └── YYYY-MM-DD.md     # Per-day check-in with YAML frontmatter
+└── history/
+    └── YYYY-Wnn-review.md  # Weekly retrospective archive
+```
 
 ---
 
