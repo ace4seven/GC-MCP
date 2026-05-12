@@ -10,7 +10,7 @@
     "dist/*.js"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "NODE_OPTIONS=--max-old-space-size=8192 tsc",
     "start": "node dist/cli.js",
     "login": "node dist/cli.js login",
     "setup": "node dist/cli.js setup",
