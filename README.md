@@ -22,6 +22,19 @@ The AI fetches data from Garmin Connect in real time and can reason across multi
 
 ---
 
+## Looking for a coach, not a data tool?
+
+This repo also ships **`gc-coach`** — a Claude Code plugin built on top of this MCP server that turns Claude into a personalised fitness coach with persistent memory, daily readiness decisions, weekly planning, and automatic red-flag detection.
+
+```
+/plugin marketplace add ace4seven/GC-MCP
+/plugin install gc-coach@gc-mcp-marketplace
+```
+
+See [`plugin/README.md`](plugin/README.md) for full details.
+
+---
+
 ## Requirements
 
 - **Node.js** 18 or later
@@ -152,6 +165,19 @@ These tools support **single-day and date-range** modes (see [Date Range Support
 
 ---
 
+### Coach (gc-coach plugin)
+
+These tools are part of the `gc-coach` plugin layer and require the plugin to be installed. They persist state in `~/.gc-mcp/coach/`.
+
+| Tool | Description | Parameters |
+|---|---|---|
+| `coach_state` | Read or write any coach state — profile, goals, current block, weekly plan, daily log, flags, weekly review. Action-discriminated (`read`, `write`, `append`, `list`). | `action`, `kind`, `date?`, `weekId?`, `content?`, `options?` |
+| `coach_log_subjective` | Append a structured daily check-in: energy, soreness, sleep quality, session done, RPE, free-form notes. | `date?`, `subjective_energy?`, `soreness?`, `sleep_quality?`, `session_done?`, `rpe?`, `notes?` |
+| `coach_compute_load_summary` | Compute 7-day and 28-day training load with ACWR zone (`detraining`, `optimal`, `high`, `danger`), trend, and per-modality breakdown. | `window_days?` (7–90, default 28) |
+| `coach_compute_readiness_synthesis` | Fuse Garmin readiness score, sleep score, HRV, and body battery into a composite score and recommendation tier (`go_hard`, `moderate`, `easy`, `rest`). | `date?` |
+
+---
+
 ## Date Range Support
 
 Twelve tools support an optional `end_date` parameter to retrieve multiple days in a single call.
@@ -212,15 +238,32 @@ Twelve tools support an optional `end_date` parameter to retrieve multiple days 
 
 ```
 src/
-  cli.ts            # Binary entry point — setup/login/server dispatch
-  index.ts          # MCP server: startServer()
-  auth.ts           # Token I/O: login(), loadClient(), isLoggedIn()
-  garmin-client.ts  # One fetch* function per tool + range helpers
-  tools.ts          # MCP tool registration
+  cli.ts                          # Binary entry point — setup/login/server dispatch
+  index.ts                        # MCP server: startServer()
+  auth.ts                         # Token I/O: login(), loadClient(), isLoggedIn()
+  garmin-client.ts                # One fetch* function per tool + range helpers
+  tools.ts                        # MCP tool registration (Garmin + coach tools)
+  coach/
+    state.ts                      # Coach state I/O (~/.gc-mcp/coach/*)
+    load-summary.ts               # ACWR + modality load computation
+    readiness-synthesis.ts        # Readiness fusion (HRV, sleep, body battery)
   __tests__/
     cli.test.ts
     auth.test.ts
     garmin-client.test.ts
+    coach-state.test.ts
+    coach-load-summary.test.ts
+    coach-readiness-synthesis.test.ts
+
+plugin/                           # gc-coach Claude Code plugin (declarative only)
+  .claude-plugin/plugin.json      # Plugin manifest
+  .mcp.json                       # Wires MCP server via npx @ace4seven/gc-mcp
+  README.md                       # Plugin-specific docs
+  commands/                       # Slash commands (/coach-onboard, /coach-today, …)
+  skills/                         # 8 coaching skills (coach-core, daily-advisor, …)
+
+.claude-plugin/
+  marketplace.json                # Local marketplace for /plugin install
 ```
 
 ### Commands

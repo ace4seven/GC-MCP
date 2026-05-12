@@ -1,6 +1,6 @@
 {
   "name": "gc-mcp-marketplace",
-  "owner": { "name": "ace4seven", "url": "https://github.com/ace4seven" },
+  "owner": { "name": "ace4seven", "url": "https://github.com/ace4seven/GC-MCP" },
   "plugins": [{
     "name": "gc-coach",
     "source": "./plugin",
